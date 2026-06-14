@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auction Bot v5 — CarMax Analyzer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 14px; }
+  #app { max-width: 980px; margin: 0 auto; padding: 16px; }
+  .logo { background: #1F3864; color: #fff; font-weight: 600; font-size: 13px; padding: 6px 12px; border-radius: 6px; letter-spacing: 1px; display:inline-block; }
+  .ver-tag { font-size: 10px; background: #fff; color: #1F3864; border: 1px solid #1F3864; padding: 1px 6px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #ddd; flex-wrap:wrap; }
+  .header-text h1 { font-size: 17px; font-weight: 600; }
+  .header-text p { font-size: 12px; color: #666; margin-top: 2px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .stat { background: #fff; border-radius: 8px; padding: 10px 14px; border: 1px solid #e0e0e0; }
+  .stat-n { font-size: 22px; font-weight: 600; }
+  .stat-l { font-size: 11px; color: #888; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom:4px; }
+  th { background: #1F3864; color: #fff; padding: 9px 10px; text-align: left; font-weight: 600; font-size: 11px; white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; display: inline-block; }
+  .t1{background:#C6EFCE;color:#276221} .t2{background:#FFEB9C;color:#7D4B00} .t3{background:#BDD7EE;color:#1F4E79}
+  .ta{background:#FCE4D6;color:#833C00} .telim{background:#f2f2f2;color:#888} .tnis{background:#FDECEA;color:#C0392B}
+  .flag { font-size:10px;padding:1px 5px;border-radius:3px;background:#FCE4D6;color:#833C00;margin-right:2px;display:inline-block;margin-top:2px; }
+  .trim-badge{font-size:10px;padding:1px 5px;border-radius:3px;margin-right:2px;display:inline-block;margin-top:2px;}
+  .trim-prem{background:#E6F1FB;color:#185FA5} .trim-base{background:#f0f0f0;color:#666}
+  .btn{font-size:12px;padding:7px 14px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer;font-weight:500;}
+  .btn:hover{background:#f5f5f5}
+  .btn-primary{background:#1F3864;color:#fff;border-color:#1F3864}
+  .btn-primary:hover{background:#16284a}
+  .btn-sm{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid;cursor:pointer;font-weight:600;white-space:nowrap;background:transparent;}
+  .btn-bought{border-color:#276221;color:#276221} .btn-bought.active,.btn-bought:hover{background:#276221;color:#fff}
+  .btn-pass{border-color:#888;color:#888} .btn-pass.active,.btn-pass:hover{background:#888;color:#fff}
+  .btn-sold{border-color:#C00000;color:#C00000} .btn-sold.active,.btn-sold:hover{background:#C00000;color:#fff}
+  .btn-undo{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid #ccc;background:#fff;cursor:pointer;}
+  .action-btns{display:flex;gap:3px;flex-wrap:wrap}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer;font-weight:500;}
+  .tab.active{background:#1F3864;color:#fff;border-color:#1F3864}
+  .elim-row{opacity:.6}
+  input[type=number]{width:76px;font-size:12px;padding:4px 6px;border-radius:4px;border:1px solid #ccc;background:#fff;}
+  .meta-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .meta-input{font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:#fff;width:175px;}
+  .empty-state{text-align:center;padding:36px;color:#888;font-size:14px}
+  .error-box{background:#FFF0F0;border:1px solid #C00000;border-radius:8px;padding:12px 16px;font-size:13px;color:#C00000;margin-bottom:14px}
+  .success-box{background:#F0FFF4;border:1px solid #276221;border-radius:8px;padding:10px 14px;font-size:12px;color:#276221;margin-bottom:14px}
+  .info-box{background:#EEF4FF;border:1px solid #1F3864;border-radius:8px;padding:12px 16px;font-size:12px;color:#1F3864;margin-bottom:14px;line-height:1.7}
+  .rules-box{margin-top:18px;background:#fff;border-radius:8px;padding:12px 16px;font-size:12px;border:1px solid #e0e0e0;line-height:1.6}
+  .loading{text-align:center;padding:60px 20px}
+  .loading h2{font-size:16px;font-weight:500;margin:14px 0 4px}
+  .loading p{font-size:13px;color:#888}
+  .progress-bar{background:#e0e0e0;border-radius:6px;height:6px;margin:14px auto;max-width:300px;overflow:hidden}
+  .progress-fill{background:#1F3864;height:100%;transition:width .3s}
+  .paste-area{width:100%;height:180px;font-size:12px;font-family:monospace;padding:10px;border:2px solid #ccc;border-radius:8px;resize:vertical;background:#fff;color:#333;}
+  .paste-area:focus{outline:none;border-color:#1F3864}
+  .paste-area.has-content{border-color:#276221;background:#F9FFF9}
+  .new-sale-btn{background:#fff;border:1px solid #1F3864;color:#1F3864;font-size:12px;padding:5px 12px;border-radius:5px;cursor:pointer;font-weight:500;}
+  .new-sale-btn:hover{background:#EEF4FF}
+  .step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#1F3864;color:#fff;border-radius:50%;font-size:12px;font-weight:700;margin-right:6px;flex-shrink:0}
+  .step-row{display:flex;align-items:flex-start;gap:4px;margin-bottom:8px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const MAX_BID = 10000;
+const MILE_CAP = 150000;
+const HARD_ELIM = ["structural damage","structural alteration","salvage","total loss","rebuilt history","fire damage","water intrusion","not actual miles","major differential defect","missing or deployed airbag","missing catalytic","perforated rust"];
+const SOFT_FLAGS = ["title absent","repo","hail damage","prior rental","prior fleet","prior lease","major sunroof defect","altered suspension","aftermarket"];
+const NISSAN_MAKES = ["nissan"];
+const EURO_MAKES = ["audi","bmw","mercedes","alfa romeo","porsche","land rover","volvo","mini cooper","jaguar"];
+const PREMIUM_TRIMS = ["citadel","rubicon","sahara","lariat","limited","denali","platinum","prestige","touring","altitude","ex-l","grand touring","premium plus","titanium","sel premium","xle premium","overland","trailhawk","high country","king ranch","raptor","svr","red sport","s line","m sport","amg","f sport"];
+
+function checkElim(ann){const a=ann.toLowerCase();return HARD_ELIM.find(e=>a.includes(e))||null}
+function isNissan(make){return NISSAN_MAKES.some(n=>make.toLowerCase().includes(n))}
+function isEuro(make){return EURO_MAKES.some(e=>make.toLowerCase().includes(e))}
+function getFlags(ann){return SOFT_FLAGS.filter(f=>ann.toLowerCase().includes(f))}
+function isPremTrim(trim){const t=trim.toLowerCase();return PREMIUM_TRIMS.some(p=>t.includes(p))}
+
+function getTier(make,ann){
+  if(checkElim(ann))return"ELIM";
+  if(isNissan(make))return"NISSAN";
+  if(isEuro(make))return"EURO";
+  const flags=getFlags(ann);
+  if(flags.length===0)return"T1";
+  if(flags.includes("title absent"))return"TA";
+  if(flags.length<=2)return"T2";
+  return"T3";
+}
+
+function tierBadge(tier){
+  const map={T1:["t1","TIER 1"],T2:["t2","TIER 2"],T3:["t3","TIER 3"],TA:["ta","TITLE ABSENT"],ELIM:["telim","ELIMINATED"],NISSAN:["tnis","PASS — NISSAN CVT"],EURO:["telim","PASS — EURO/LUXURY"]};
+  const[cls,label]=map[tier]||["telim",tier];
+  return`<span class="badge ${cls}">${label}</span>`;
+}
+
+function sortRuns(units){
+  return[...units].sort((a,b)=>{
+    const[al,an]=a.run.split("/");const[bl,bn]=b.run.split("/");
+    if(al!==bl)return al.localeCompare(bl);
+    return parseInt(an)-parseInt(bn);
+  });
+}
+
+function parseText(raw){
+  const text = raw.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+  const lines = text.split("\n").map(l=>l.replace(/\t/g," ").trim()).filter(Boolean);
+  const units=[];
+  const skipWords=["carmaxauctions","carmax makes","page:","run year","www.","you are responsible","information about","prior to bidding","sale date","auction date"];
+  // Anchor mileage on drivetrain token: RunNum Year Make ModelTrim Mileage 2WD/4WD/AWD/FWD/RWD
+  const re=/^([A-Z]\/\d+)\s+(\d{4})\s+([A-Za-z\-]+)\s+(.+?)\s+(\d{1,3},?\d{3})\s+(2WD|4WD|AWD|FWD|RWD)/;
+  // Fallback for units missing drivetrain info: RunNum Year Make ModelTrim Mileage(comma required)
+  const reFallback=/^([A-Z]\/\d+)\s+(\d{4})\s+([A-Za-z\-]+)\s+(.+?)\s+(\d{1,3},\d{3})\s/;
+  // VIN pattern to detect vehicle detail lines (not announcements)
+  const vinRe=/\b[A-HJ-NPR-Z0-9]{17}\b/;
+  let i=0;
+  while(i<lines.length){
+    const line=lines[i];
+    if(skipWords.some(w=>line.toLowerCase().includes(w))){i++;continue;}
+    let m=line.match(re)||line.match(reFallback);
+    if(m){
+      const make=m[3]||"";
+      const modelTrim=(m[4]||"").trim().split(/\s+/);
+      const model=modelTrim[0]||"";
+      const trim=modelTrim.slice(1).join(" ");
+      const miles=parseInt(m[5].replace(",",""));
+      // Announcement is the NEXT line IF it doesn't start a new run and isn't vehicle detail
+      let ann="No announcement(s)";
+      if(i+1<lines.length){
+        const next=lines[i+1];
+        const isNewRun=/^[A-Z]\/\d+/.test(next);
+        const isVehicleLine=vinRe.test(next)||(next.match(/\d{1,3},?\d{3}/)&&/(2WD|4WD|AWD|FWD|RWD)/.test(next));
+        const isSkip=skipWords.some(w=>next.toLowerCase().includes(w));
+        if(!isNewRun&&!isVehicleLine&&!isSkip&&next.length>1){ann=next;}
+      }
+      units.push({run:m[1],year:m[2],make,model,trim,miles,ann});
+      i+=2;
+    } else {i++;}
+  }
+  return units;
+}
+
+function buildPrompt(u){
+  const prem=isPremTrim(u.trim);
+  const warn=prem?`IMPORTANT: "${u.trim}" is a PREMIUM TRIM. Price THIS EXACT TRIM, NOT the base model. Premium trims command $3,000–$8,000 more than base.`:"";
+  return`You are an expert used car buyer. Price this EXACT trim for Richmond VA retail.
+Vehicle: ${u.year} ${u.make} ${u.model} ${u.trim}
+Mileage: ${u.miles.toLocaleString()}
+${warn}
+Use CarGurus Richmond VA for EXACT trim "${u.trim}", ±1 model year, within 15K miles.
+max_hammer = retail_target - 3600
+Return ONLY valid JSON, no markdown:
+{"retail_low":NUMBER,"retail_high":NUMBER,"retail_target":NUMBER,"max_hammer":NUMBER,"trim_premium":${prem},"notes":"one-line tip"}`;
+}
+
+function freshState(){return{step:"upload",units:[],comps:{},bids:{},saleDate:"",saleLoc:"",activeTab:"active",loading:false,loadingIdx:0,loadingTotal:0,loadingMsg:"",parseError:"",pasteText:""};}
+let STATE=freshState();
+
+function resetForNewSale(){STATE=freshState();render();}
+
+function render(){
+  const app=document.getElementById("app");
+  if(STATE.loading){app.innerHTML=renderLoading();return;}
+  if(STATE.step==="upload"){app.innerHTML=renderUpload();bindUpload();return;}
+  if(STATE.step==="review"){app.innerHTML=renderReview();bindReview();return;}
+  app.innerHTML=renderSheet();bindSheet();
+}
+
+function renderLoading(){
+  const pct=STATE.loadingTotal?Math.round((STATE.loadingIdx/STATE.loadingTotal)*100):0;
+  return`<div class="loading">
+    <div style="font-size:32px">⏳</div>
+    <h2>Pulling comps ${STATE.loadingIdx} / ${STATE.loadingTotal}</h2>
+    <p style="margin-bottom:4px">${STATE.loadingMsg}</p>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <p style="font-size:11px;margin-top:8px">CarGurus Richmond VA · exact trim · ±1 year · similar miles</p>
+  </div>`;
+}
+
+function renderUpload(){
+  const err=STATE.parseError?`<div class="error-box">⚠️ ${STATE.parseError}</div>`:"";
+  const hasText=STATE.pasteText.trim().length>0;
+  return`<div>
+    <div class="header">
+      <span class="logo">AUCTION BOT <span class="ver-tag">v5</span></span>
+      <div class="header-text"><h1>CarMax Auction Analyzer</h1><p>Paste your run list to generate your buy sheet instantly</p></div>
+    </div>
+    ${err}
+    <div class="info-box">
+      <strong>How to load today's list on your Mac:</strong><br>
+      <div class="step-row"><span class="step-num">1</span> Open the CarMax auction PDF in <strong>Preview</strong></div>
+      <div class="step-row"><span class="step-num">2</span> Press <strong>⌘A</strong> to select all, then <strong>⌘C</strong> to copy</div>
+      <div class="step-row"><span class="step-num">3</span> Click in the box below and press <strong>⌘V</strong> to paste</div>
+      <div class="step-row"><span class="step-num">4</span> Click <strong>Load Run List</strong></div>
+    </div>
+    <div class="meta-row">
+      <input class="meta-input" id="saleDate" placeholder="Sale date (e.g. June 10, 2026)" value="${STATE.saleDate}">
+      <input class="meta-input" id="saleLoc" placeholder="Location (e.g. New Kent)" value="${STATE.saleLoc}">
+    </div>
+    <textarea id="pasteArea" class="paste-area ${hasText?"has-content":""}" placeholder="Paste your CarMax run list here (⌘V)...">${STATE.pasteText}</textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+      <button class="btn btn-primary" id="loadBtn">Load Run List ↗</button>
+      <button class="btn" id="clearBtn">Clear</button>
+      ${hasText?`<span style="font-size:12px;color:#276221">✓ Text ready — click Load Run List</span>`:`<span style="font-size:12px;color:#888">Paste your run list above</span>`}
+    </div>
+    <div class="rules-box">
+      <strong>Rules:</strong> $10K max bid · $3,600 cost deduction · 150K mile cap · No Nissan · No Euro luxury · CarGurus Richmond VA · Trim-level pricing · Run order A→B→C low to high
+    </div>
+  </div>`;
+}
+
+function bindUpload(){
+  document.getElementById("saleDate").addEventListener("input",e=>STATE.saleDate=e.target.value);
+  document.getElementById("saleLoc").addEventListener("input",e=>STATE.saleLoc=e.target.value);
+  const ta=document.getElementById("pasteArea");
+  ta.addEventListener("input",e=>{
+    STATE.pasteText=e.target.value;
+    ta.className="paste-area"+(STATE.pasteText.trim().length>0?" has-content":"");
+  });
+  document.getElementById("clearBtn").addEventListener("click",()=>{STATE.pasteText="";render();});
+  document.getElementById("loadBtn").addEventListener("click",()=>{
+    const text=STATE.pasteText.trim();
+    if(!text){STATE.parseError="Please paste your run list text first.";render();return;}
+    const parsed=parseText(text);
+    if(parsed.length===0){
+      STATE.parseError="Could not find any auction units in the pasted text. Make sure you copied the full run list from the CarMax PDF and try again.";
+      render();return;
+    }
+    // Full reset — clear everything from previous sale
+    STATE.units=sortRuns(parsed);
+    STATE.comps={};
+    STATE.bids={};
+    STATE.activeTab="active";
+    STATE.parseError="";
+    STATE.step="review";
+    render();
+  });
+}
+
+function getBuyable(){return sortRuns(STATE.units.filter(u=>u.miles<=MILE_CAP&&!checkElim(u.ann)&&!isNissan(u.make)&&!isEuro(u.make)));}
+function getElim(){return sortRuns(STATE.units.filter(u=>u.miles>MILE_CAP||checkElim(u.ann)||isNissan(u.make)||isEuro(u.make)));}
+
+function renderReview(){
+  const buyable=getBuyable();const elim=getElim();
+  const rows=sortRuns(STATE.units).map(u=>{
+    const e=u.miles>MILE_CAP?`Over ${MILE_CAP.toLocaleString()} miles`:checkElim(u.ann);
+    const nis=isNissan(u.make);const eur=isEuro(u.make);
+    const tier=e?"ELIM":nis?"NISSAN":eur?"EURO":getTier(u.make,u.ann);
+    const flags=getFlags(u.ann);const prem=isPremTrim(u.trim);
+    return`<tr style="${(e||nis||eur)?"opacity:.6":""}">
+      <td><strong>${u.run}</strong></td>
+      <td><div style="font-weight:600">${u.year} ${u.make} ${u.model}</div>
+        <span class="trim-badge ${prem?"trim-prem":"trim-base"}">${u.trim}${prem?" ★":""}</span></td>
+      <td style="${u.miles>MILE_CAP?"color:#C00000":""}">${u.miles.toLocaleString()}</td>
+      <td>${tierBadge(tier)}</td>
+      <td>${e?`<span style="color:#C00000;font-size:11px">${e}</span>`:nis?`<span style="color:#C00000;font-size:11px">CVT — pass</span>`:eur?`<span style="color:#888;font-size:11px">Euro — pass</span>`:flags.length?flags.map(f=>`<span class="flag">${f}</span>`).join(""):`<span style="color:#888;font-size:11px">Clean</span>`}</td>
+    </tr>`;
+  }).join("");
+  return`<div>
+    <div class="header">
+      <span class="logo">AUCTION BOT <span class="ver-tag">v5</span></span>
+      <div class="header-text"><h1>CarMax ${STATE.saleLoc||"Auction"} — ${STATE.saleDate||"Run List"}</h1>
+        <p>${STATE.units.length} units · ${buyable.length} viable · ${elim.length} eliminated</p></div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="new-sale-btn" id="newSaleBtn">↩ New Sale</button>
+        <button class="btn btn-primary" id="pullBtn" style="font-size:12px">Pull comps + build sheet ↗</button>
+      </div>
+    </div>
+    <div class="success-box">✓ ${STATE.units.length} units loaded · ${buyable.length} viable · ${elim.length} auto-eliminated · sorted A→B→C low to high</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">${STATE.units.length}</div><div class="stat-l">Total units</div></div>
+      <div class="stat"><div class="stat-n">${buyable.length}</div><div class="stat-l">Viable</div></div>
+      <div class="stat"><div class="stat-n" style="color:#C00000">${elim.length}</div><div class="stat-l">Eliminated</div></div>
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Run #</th><th>Vehicle + Trim</th><th>Miles</th><th>Status</th><th>Announcements</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p style="font-size:11px;color:#888;margin-top:6px">★ = premium trim — will be priced at trim level, not base</p>
+  </div>`;
+}
+
+function bindReview(){
+  document.getElementById("newSaleBtn")?.addEventListener("click",resetForNewSale);
+  document.getElementById("retryBtn")?.addEventListener("click",async()=>{
+    const list=getBuyable().filter(u=>!STATE.comps[u.run]||STATE.comps[u.run].retail_target<500);
+    if(list.length===0){alert("No failed comps to retry.");return;}
+    STATE.loading=true;STATE.loadingTotal=list.length;STATE.loadingIdx=0;render();
+    for(let i=0;i<list.length;i++){
+      const u=list[i];
+      STATE.loadingIdx=i+1;STATE.loadingMsg=`Retrying: ${u.year} ${u.make} ${u.model} ${u.trim}`;render();
+      delete STATE.comps[u.run];
+      try{
+        const res=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:buildPrompt(u)}]})
+        });
+        const data=await res.json();
+        if(data.error){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"API error: "+data.error.message};continue;}
+        const raw=(data.content?.find(b=>b.type==="text")?.text||"{}").replace(/```json|```/g,"").trim();
+        const parsed=JSON.parse(raw);
+        if(!parsed.retail_target||parsed.retail_target<500){
+          STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Bad comp — retry again"};
+        } else {
+          parsed.max_hammer=parsed.retail_target-3600;
+          STATE.comps[u.run]=parsed;
+        }
+      }catch(err){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Parse error"};console.error(u.run,err);}
+    }
+    STATE.loading=false;render();
+  });
+  document.getElementById("pullBtn")?.addEventListener("click",async()=>{
+    const list=getBuyable();
+    STATE.loading=true;STATE.loadingTotal=list.length;STATE.loadingIdx=0;render();
+    for(let i=0;i<list.length;i++){
+      const u=list[i];
+      STATE.loadingIdx=i+1;STATE.loadingMsg=`${u.year} ${u.make} ${u.model} ${u.trim}`;render();
+      if(STATE.comps[u.run])continue;
+      try{
+        const res=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:buildPrompt(u)}]})
+        });
+        const data=await res.json();
+        console.log("API response for",u.run,"status:",res.status,"data:",JSON.stringify(data).substring(0,300));
+        if(data.error){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"API: "+data.error.message};continue;}
+        if(!data.content||data.content.length===0){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Empty response (HTTP "+res.status+")"};continue;}
+        const raw=(data.content.find(b=>b.type==="text")?.text||"{}").replace(/```json|```/g,"").trim();
+        console.log("Raw text for",u.run,":",raw.substring(0,200));
+        const parsed=JSON.parse(raw);
+        if(!parsed.retail_target||parsed.retail_target<500){
+          STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Bad comp returned — retry"};
+        } else {
+          parsed.max_hammer=parsed.retail_target-3600;
+          STATE.comps[u.run]=parsed;
+        }
+      }catch(err){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Error: "+String(err).substring(0,60)};console.error(u.run,err);}
+    }
+    STATE.loading=false;STATE.step="sheet";render();
+  });
+}
+
+function renderSheet(){
+  const buyable=getBuyable();const elim=getElim();
+  const active=buyable.filter(u=>!["sold","bought","passed"].includes(STATE.bids[u.run]?.result));
+  const resolved=buyable.filter(u=>["sold","bought","passed"].includes(STATE.bids[u.run]?.result));
+  const bought=resolved.filter(u=>STATE.bids[u.run]?.result==="bought");
+  const soldOut=resolved.filter(u=>STATE.bids[u.run]?.result==="sold");
+  const passed=resolved.filter(u=>STATE.bids[u.run]?.result==="passed");
+  const totalSpent=bought.reduce((s,u)=>s+(Number(STATE.bids[u.run]?.hammer)||0),0);
+  const tab=STATE.activeTab;
+
+  function activeRow(u){
+    const comp=STATE.comps[u.run];const bid=STATE.bids[u.run]||{};
+    const tier=getTier(u.make,u.ann);const flags=getFlags(u.ann);const prem=isPremTrim(u.trim);
+    const hammer=bid.hammer?Number(bid.hammer):null;
+    const over=hammer&&hammer>MAX_BID;
+    const good=comp&&hammer&&hammer<=(comp.max_hammer||MAX_BID);
+    return`<tr data-run="${u.run}">
+      <td><strong>${u.run}</strong></td>
+      <td><div style="font-weight:600">${u.year} ${u.make} ${u.model}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">
+          <span class="trim-badge ${prem?"trim-prem":"trim-base"}">${u.trim}${prem?" ★":""}</span>
+          ${flags.map(f=>`<span class="flag">${f}</span>`).join("")}
+        </div></td>
+      <td>${u.miles.toLocaleString()}</td>
+      <td>${tierBadge(tier)}</td>
+      <td>${comp?(comp.retail_target>0?`$${comp.retail_low?.toLocaleString()}-$${comp.retail_high?.toLocaleString()}`:`<span style="color:#C00000;font-size:11px">Retry</span>`):"-"}</td>
+      <td style="font-weight:600;${over?"color:#C00000":good?"color:#276221":""}">${comp?(comp.max_hammer>0?`$${comp.max_hammer?.toLocaleString()}`:`<span style="color:#C00000;font-size:11px">Retry</span>`):"-"}</td>
+      <td><input type="number" class="hammer-input" data-run="${u.run}" placeholder="$" value="${bid.hammer||""}"
+        style="${over?"border-color:#C00000":good?"border-color:#276221":""}"></td>
+      <td><div class="action-btns">
+        <button class="btn-sm btn-bought result-btn" data-run="${u.run}" data-result="bought">✓ Bought</button>
+        <button class="btn-sm btn-pass result-btn" data-run="${u.run}" data-result="passed">✗ Pass</button>
+        <button class="btn-sm btn-sold result-btn" data-run="${u.run}" data-result="sold">⊘ Sold</button>
+      </div></td>
+      <td style="font-size:11px;color:#666;max-width:140px">${comp?.trim_premium?'<span style="color:#185FA5;font-weight:600">★ </span>':""}${comp?.notes||""}</td>
+    </tr>`;
+  }
+
+  function resultRow(u,label,bg){
+    const comp=STATE.comps[u.run];const bid=STATE.bids[u.run]||{};const prem=isPremTrim(u.trim);
+    const lbg=label==="Bought"?"#276221":label==="Sold"?"#C00000":"#888";
+    return`<tr style="background:${bg}">
+      <td><strong>${u.run}</strong></td>
+      <td><div style="font-weight:600">${u.year} ${u.make} ${u.model}</div>
+        <span class="trim-badge ${prem?"trim-prem":"trim-base"}">${u.trim}${prem?" ★":""}</span></td>
+      <td>${u.miles.toLocaleString()}</td>
+      <td>${comp?`$${comp.retail_low?.toLocaleString()}–$${comp.retail_high?.toLocaleString()}`:"—"}</td>
+      <td>${comp?`$${comp.max_hammer?.toLocaleString()}`:"—"}</td>
+      <td style="font-weight:600">${bid.hammer?`$${Number(bid.hammer).toLocaleString()}`:"—"}</td>
+      <td><span class="badge" style="background:${lbg};color:#fff">${label}</span></td>
+      <td><button class="btn-undo undo-btn" data-run="${u.run}">Undo</button></td>
+    </tr>`;
+  }
+
+  let tabContent="";
+  // Build error summary from failed comps
+const failedComps=getBuyable().filter(u=>STATE.comps[u.run]&&STATE.comps[u.run].retail_target<500);
+const errorSummary=failedComps.length>0?`<div style="background:#FFF0F0;border:0.5px solid #C00000;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#C00000">
+  <strong>⚠ ${failedComps.length} comp(s) failed.</strong> Notes column shows the error. Open browser console (F12 → Console) for full details, then click "Retry $0 comps".
+  <br><span style="opacity:.8">${failedComps.map(u=>u.run+": "+((STATE.comps[u.run]?.notes)||"unknown error")).join(" · ")}</span>
+</div>`:"";
+
+if(tab==="active"){
+    tabContent=errorSummary+(active.length===0
+      ?`<div class="empty-state">✅ All units resolved — check the Results tab</div>`
+      :`<div style="overflow-x:auto"><table>
+        <thead><tr><th>Run #</th><th>Vehicle + Trim</th><th>Miles</th><th>Tier</th><th>Retail Range</th><th>Max Hammer</th><th>Hammer $</th><th>Action</th><th>Notes</th></tr></thead>
+        <tbody>${active.map(activeRow).join("")}</tbody>
+      </table>
+      <p style="font-size:11px;color:#888;margin-top:6px">✓ Bought = you won it &nbsp;·&nbsp; ✗ Pass = you walked &nbsp;·&nbsp; ⊘ Sold = another buyer got it</p></div>`;
+  }else if(tab==="results"){
+    tabContent=resolved.length===0
+      ?`<div class="empty-state">No results logged yet</div>`
+      :`<div style="overflow-x:auto"><table>
+        <thead><tr><th>Run #</th><th>Vehicle</th><th>Miles</th><th>Retail Range</th><th>Max Hammer</th><th>Hammer $</th><th>Result</th><th></th></tr></thead>
+        <tbody>
+          ${bought.map(u=>resultRow(u,"Bought","rgba(39,98,33,.06)")).join("")}
+          ${soldOut.map(u=>resultRow(u,"Sold","rgba(192,0,0,.04)")).join("")}
+          ${passed.map(u=>resultRow(u,"Passed","#fafafa")).join("")}
+        </tbody>
+      </table>
+      <p style="font-size:11px;color:#888;margin-top:6px">Click Undo to move a unit back to the active list</p></div>`;
+  }else{
+    tabContent=`<div style="overflow-x:auto"><table>
+      <thead><tr><th>Run #</th><th>Vehicle</th><th>Miles</th><th>Reason</th></tr></thead>
+      <tbody>${elim.map(u=>{
+        const r=u.miles>MILE_CAP?`Over ${MILE_CAP.toLocaleString()} miles`:isNissan(u.make)?"Nissan — CVT risk":isEuro(u.make)?"Euro luxury — slow turn":checkElim(u.ann)||"Auto-eliminated";
+        return`<tr class="elim-row"><td>${u.run}</td><td>${u.year} ${u.make} ${u.model} ${u.trim}</td><td>${u.miles.toLocaleString()}</td><td style="color:#C00000">${r}</td></tr>`;
+      }).join("")}</tbody>
+    </table></div>`;
+  }
+
+  return`<div>
+    <div class="header">
+      <span class="logo">AUCTION BOT <span class="ver-tag">v5</span></span>
+      <div class="header-text">
+        <h1>Buy Sheet — CarMax ${STATE.saleLoc||"Auction"} ${STATE.saleDate||""}</h1>
+        <p>${active.length} on block · ${bought.length} bought · ${soldOut.length} sold out · ${passed.length} passed · $${totalSpent.toLocaleString()} spent</p>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="new-sale-btn" id="retryBtn">Retry $0 comps</button>
+        <button class="new-sale-btn" id="newSaleBtn">↩ New Sale</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">${active.length}</div><div class="stat-l">On the block</div></div>
+      <div class="stat"><div class="stat-n" style="color:#276221">${bought.length}</div><div class="stat-l">Bought</div></div>
+      <div class="stat"><div class="stat-n" style="color:#C00000">${soldOut.length}</div><div class="stat-l">Sold out</div></div>
+      <div class="stat"><div class="stat-n" style="color:#888">${passed.length}</div><div class="stat-l">Passed</div></div>
+      <div class="stat"><div class="stat-n">$${totalSpent.toLocaleString()}</div><div class="stat-l">Spent</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab ${tab==="active"?"active":""}" data-tab="active">Active (${active.length})</button>
+      <button class="tab ${tab==="results"?"active":""}" data-tab="results">Results (${resolved.length})</button>
+      <button class="tab ${tab==="eliminated"?"active":""}" data-tab="eliminated">Eliminated (${elim.length})</button>
+    </div>
+    ${tabContent}
+  </div>`;
+}
+
+function bindSheet(){
+  document.getElementById("newSaleBtn")?.addEventListener("click",resetForNewSale);
+  document.getElementById("retryBtn")?.addEventListener("click",async()=>{
+    const list=getBuyable().filter(u=>!STATE.comps[u.run]||STATE.comps[u.run].retail_target<500);
+    if(list.length===0){alert("No failed comps to retry.");return;}
+    STATE.loading=true;STATE.loadingTotal=list.length;STATE.loadingIdx=0;render();
+    for(let i=0;i<list.length;i++){
+      const u=list[i];
+      STATE.loadingIdx=i+1;STATE.loadingMsg=`Retrying: ${u.year} ${u.make} ${u.model} ${u.trim}`;render();
+      delete STATE.comps[u.run];
+      try{
+        const res=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:buildPrompt(u)}]})
+        });
+        const data=await res.json();
+        if(data.error){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"API error: "+data.error.message};continue;}
+        const raw=(data.content?.find(b=>b.type==="text")?.text||"{}").replace(/```json|```/g,"").trim();
+        const parsed=JSON.parse(raw);
+        if(!parsed.retail_target||parsed.retail_target<500){
+          STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Bad comp — retry again"};
+        } else {
+          parsed.max_hammer=parsed.retail_target-3600;
+          STATE.comps[u.run]=parsed;
+        }
+      }catch(err){STATE.comps[u.run]={retail_low:0,retail_high:0,retail_target:0,max_hammer:0,trim_premium:false,notes:"Parse error"};console.error(u.run,err);}
+    }
+    STATE.loading=false;render();
+  });
+  document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",e=>{STATE.activeTab=e.target.dataset.tab;render();}));
+  document.querySelectorAll(".hammer-input").forEach(inp=>inp.addEventListener("input",e=>{
+    const run=e.target.dataset.run;
+    STATE.bids[run]={...(STATE.bids[run]||{}),hammer:e.target.value};
+  }));
+  document.querySelectorAll(".result-btn").forEach(btn=>btn.addEventListener("click",e=>{
+    const run=e.target.dataset.run;const result=e.target.dataset.result;
+    STATE.bids[run]={...(STATE.bids[run]||{}),result};render();
+  }));
+  document.querySelectorAll(".undo-btn").forEach(btn=>btn.addEventListener("click",e=>{
+    const run=e.target.dataset.run;
+    const b={...STATE.bids[run]};delete b.result;STATE.bids[run]=b;render();
+  }));
+}
+
+render();
+</script>
+</body>
+</html>
