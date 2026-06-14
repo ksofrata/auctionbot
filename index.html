@@ -295,7 +295,7 @@ function bindReview(){
       delete STATE.comps[u.run];
       try{
         const res=await fetch("https://api.anthropic.com/v1/messages",{
-          method:"POST",headers:{"Content-Type":"application/json"},
+          method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
           body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:buildPrompt(u)}]})
         });
         const data=await res.json();
@@ -321,7 +321,7 @@ function bindReview(){
       if(STATE.comps[u.run])continue;
       try{
         const res=await fetch("https://api.anthropic.com/v1/messages",{
-          method:"POST",headers:{"Content-Type":"application/json"},
+          method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
           body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:buildPrompt(u)}]})
         });
         const data=await res.json();
@@ -475,7 +475,7 @@ function bindSheet(){
       delete STATE.comps[u.run];
       try{
         const res=await fetch("https://api.anthropic.com/v1/messages",{
-          method:"POST",headers:{"Content-Type":"application/json"},
+          method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},
           body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:buildPrompt(u)}]})
         });
         const data=await res.json();
